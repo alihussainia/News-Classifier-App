@@ -256,3 +256,16 @@ This part is optional. We've built our web application, and containerized it wit
   
   3. Head over to `test_app.py` to get started. As you develop the tests using prompts in this file, you can run `pytest` to run the tests.
 
+## Sample I/O:
+```
+{
+    'description': 'A capsule carrying solar material from the Genesis space '
+                'probe has made a crash landing at a US Air Force training '
+                'facility in the US state of Utah.',
+    'id': 86273,
+    'label': 'Entertainment',
+    'source': 'Voice of America',
+    'title': 'Capsule from Genesis Space Probe Crashes in Utah Desert',
+    'url': 'http://www.sciencedaily.com/releases/2004/09/040908090621.htm'
+ }
+```
