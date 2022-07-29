@@ -1,11 +1,15 @@
+from http import server
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from loguru import logger
 import joblib
-
+import time
+from regex import P
 from sentence_transformers import SentenceTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
+import uvicorn
 
 GLOBAL_CONFIG = {
     "model": {
@@ -14,11 +18,11 @@ GLOBAL_CONFIG = {
             "sentence_transformer_embedding_dim": 768
         },
         "classifier": {
-            "serialized_model_path": "./data/news_classifier.joblib"
+            "serialized_model_path": "../data/news_classifier.joblib",
         }
     },
     "service": {
-        "log_destination": "./data/logs.out"
+        "log_destination": "../data/logs.out",
     }
 }
 
@@ -59,13 +63,13 @@ class NewsCategoryClassifier:
         1. Load the sentence transformer model and initialize the `featurizer` of type `TransformerFeaturizer` (Hint: revisit Week 1 Step 4)
         2. Load the serialized model as defined in GLOBAL_CONFIG['model'] into memory and initialize `model`
         """
-        featurizer = None
-        model = None
-        self.pipeline = Pipeline([
-            ('transformer_featurizer', featurizer),
-            ('classifier', model)
-        ])
-
+        featurizer = TransformerFeaturizer(
+            self.config["model"]["featurizer"]["sentence_transformer_embedding_dim"],
+            SentenceTransformer('sentence-transformers/'+self.config["model"]["featurizer"]["sentence_transformer_model"])
+        )
+        self.model = joblib.load(self.config["model"]["classifier"]["serialized_model_path"])
+        self.pipeline = Pipeline([("featurizer", featurizer), ("model", self.model)])
+        
     def predict_proba(self, model_input: dict) -> dict:
         """
         [TO BE IMPLEMENTED]
@@ -80,8 +84,12 @@ class NewsCategoryClassifier:
             ...
         }
         """
-        return {}
-
+        pred = {}
+        predictions = self.pipeline.predict_proba([model_input["source"]])
+        for i in range(len(predictions[0])):
+            pred[f"label_{i+1}"] = predictions[0][i]
+        return pred
+         
     def predict_label(self, model_input: dict) -> str:
         """
         [TO BE IMPLEMENTED]
@@ -91,7 +99,7 @@ class NewsCategoryClassifier:
 
         Output format: predicted label for the model input
         """
-        return ""
+        return self.pipeline.predict([model_input["source"]])[0]
 
 
 app = FastAPI()
@@ -106,8 +114,12 @@ def startup_event():
         Access to the model instance and log file will be needed in /predict endpoint, make sure you
         store them as global variables
     """
+    global news_classifier
+    global log_file
+    news_classifier = NewsCategoryClassifier(GLOBAL_CONFIG)
+    log_file = open(GLOBAL_CONFIG["service"]["log_destination"], "w")
+    logger.add(log_file, format="{time:YYYY-MM-DD at HH:mm:ss} | {level} | {message}")
     logger.info("Setup completed")
-
 
 @app.on_event("shutdown")
 def shutdown_event():
@@ -117,6 +129,8 @@ def shutdown_event():
         1. Make sure to flush the log file and close any file pointers to avoid corruption
         2. Any other cleanups
     """
+    log_file.flush()
+    log_file.close()
     logger.info("Shutting down application")
 
 
@@ -137,9 +151,16 @@ def predict(request: PredictRequest):
         }
         3. Construct an instance of `PredictResponse` and return
     """
-    return {}
-
+    start_time = time.time()
+    prediction = news_classifier.predict_proba(request.dict())
+    end_time = time.time()
+    latency = (end_time - start_time) * 1000
+    logger.info(f"{request.dict()} | {prediction} | {latency}")
+    return PredictResponse(scores=prediction, label=news_classifier.predict_label(request.dict()))
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+if __name__ == '__main__':
+    uvicorn.run(app, host='0.0.0.0', port=8000)
