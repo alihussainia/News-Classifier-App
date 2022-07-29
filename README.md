@@ -255,4 +255,3 @@ This part is optional. We've built our web application, and containerized it wit
     (ii) [Testing FastAPI with startup and shutdown events](https://fastapi.tiangolo.com/advanced/testing-events/)
   
   3. Head over to `test_app.py` to get started. As you develop the tests using prompts in this file, you can run `pytest` to run the tests.
-
