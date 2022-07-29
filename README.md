@@ -258,7 +258,7 @@ $ python test_app.py
 
 ## References 
 
-- [PyTest Documentation](https://docs.pytest.org/en/7.1.x/getting-started.html) to get started and familiarize yourself with this library.
+- [PyTest Documentation](https://docs.pytest.org/en/7.1.x/getting-started.html)
 - [Introduction to testing FastAPI](https://fastapi.tiangolo.com/tutorial/testing/)
 - [Testing FastAPI with startup and shutdown events](https://fastapi.tiangolo.com/advanced/testing-events/)
   
