@@ -18,6 +18,8 @@ You can download the starter code from: https://corise-mlops.s3.us-west-2.amazon
 project
 │   README.md
 │   Dockerfile
+│   .dockerignore
+│   .gitignore
 │   requirements.txt
 |   test_app.py
 |   __init__.py
@@ -131,14 +133,14 @@ $ curl -X 'POST' \
   
 ```bash
 
-$ docker build --platform linux/amd64 -t news-classifier .
+$ docker build --platform linux/amd64 -t <your-dockerhub-username>/news-classifier-app:v1 .
 ```
 
-2. Start the container:
+2. Start the container already hosted on dockerhub:
 
 ```bash
 
-$ docker run -p 80:80 news-classifier-w3
+$ docker run --name news-app -p 80:80 alihussainia/news-classifier-app:v1 
 ```
 
 3. Test the Docker container with an example request:
@@ -172,14 +174,14 @@ $ docker ps
 This will return a response like the following:
 ```bash
 
-CONTAINER ID   IMAGE                COMMAND                  CREATED         STATUS         PORTS                NAMES
-3a45c7f7661c   news-classifier-w3   "uvicorn server:app …"   4 minutes ago   Up 4 minutes   0.0.0.0:80->80/tcp   happy_burnell
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED         STATUS         PORTS                NAMES
+3a45c7f7661c   alihussainia/news-classifier-app:v1   "uvicorn server:app …"   4 minutes ago   Up 4 minutes   0.0.0.0:80->80/tcp   news-app
 ```
 
 2. SSH into the container using the container id from above: 
 
 ```bash
-$ docker exec -it <container id> /bin/sh
+$ docker exec -it news-app /bin/sh
 ```
 
 3. Tail the logs:
@@ -204,7 +206,7 @@ $ tail -f ../data/logs.out
   "source": "Yahoo World",
   "url": "http://us.rd.yahoo.com/dailynews/rss/world/*http://story.news.yahoo.com/news?tmpl=story2u=/nm/20050104/bs_nm/markets_stocks_us_europe_dc",
   "title": "Wall Street Set to Open Firmer (Reuters)",
-  "description": "Reuters - Wall Street was set to start higher on\Tuesday to recoup some of the prior session's losses, though high-profile retailer Amazon.com  may come under\pressure after a broker downgrade."
+  "description": "Reuters - Wall Street was set to start higher on Tuesday to recoup some of the prior session's losses, though high-profile retailer Amazon.com  may come under pressure after a broker downgrade."
 }
 ```
 
@@ -244,14 +246,20 @@ $ tail -f ../data/logs.out
 }
 ```
 
-## [Step 5][Optional] Testing with Pytest
+## [Step 5] Testing with Pytest
 
 This part is optional. We've built our web application, and containerized it with Docker. But imagine a team of ML engineers and scientists that needs to maintain, improve and scale this service over time. It would be nice to write some tests to ensure we don't regress! 
 
-  1. `Pytest` is a popular testing framework for Python. If you haven't used it before, take a look at [this page](https://docs.pytest.org/en/7.1.x/getting-started.html) to get started and familiarize yourself with this library.
-   
-  2. How do we test FastAPI applications with Pytest? Glad you asked, here's two resources to help you get started:
-    (i) [Introduction to testing FastAPI](https://fastapi.tiangolo.com/tutorial/testing/)
-    (ii) [Testing FastAPI with startup and shutdown events](https://fastapi.tiangolo.com/advanced/testing-events/)
+1. Test the application using: 
+
+```bash
+$ python test_app.py
+```
+
+## References 
+
+- [PyTest Documentation](https://docs.pytest.org/en/7.1.x/getting-started.html) to get started and familiarize yourself with this library.
+- [Introduction to testing FastAPI](https://fastapi.tiangolo.com/tutorial/testing/)
+- [Testing FastAPI with startup and shutdown events](https://fastapi.tiangolo.com/advanced/testing-events/)
   
-  3. Head over to `test_app.py` to get started. As you develop the tests using prompts in this file, you can run `pytest` to run the tests.
+
